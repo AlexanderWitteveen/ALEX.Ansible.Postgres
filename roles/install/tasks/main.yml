@@ -1,6 +1,5 @@
 ---
 
-
 - name: Ensure Data folder exists
   file:
     path: "/{{ prop_basename }}/postgres"
