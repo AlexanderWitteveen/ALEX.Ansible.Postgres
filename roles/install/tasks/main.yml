@@ -1,0 +1,52 @@
+---
+
+
+- name: Ensure Data folder exists
+  file:
+    path: "/{{ prop_basename }}/postgres"
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+  vars:
+    ansible_connection: ssh
+    ansible_host: "{{ prop_ipaddress }}"
+  become: true
+
+- name: Load docker image
+  shell: |
+    docker image load --input /mnt/sources-dev/docker/postgres/{{ prop_container_postgres_file }}
+  args:
+    executable: /bin/bash
+  vars:
+    ansible_connection: ssh
+    ansible_host: "{{ prop_ipaddress }}"
+  become: true
+
+- name: create container
+  shell: |
+    docker container create \
+      --name postgres \
+      --restart=always \
+      --pull=never \
+      -p 5432:5432 \
+      -e POSTGRES_PASSWORD={{ prop_admin_password }} \
+      -e POSTGRES_USER={{ prop_admin_username }} \
+      -v /{{ prop_basename }}/postgres:/var/lib/postgresql/data \
+      {{ prop_container_postgres_tag }}
+  args:
+    executable: /bin/bash
+  vars:
+    ansible_connection: ssh
+    ansible_host: "{{ prop_ipaddress }}"
+  become: true
+
+- name: run container
+  shell: |
+    docker container start postgres
+  args:
+    executable: /bin/bash
+  vars:
+    ansible_connection: ssh
+    ansible_host: "{{ prop_ipaddress }}"
+  become: true
